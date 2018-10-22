@@ -726,7 +726,7 @@ var SharedService = (function () {
                         return [4 /*yield*/, this.getExpirationDate(tokens.refreshToken)];
                     case 4:
                         expDate = _d.sent();
-                        return [4 /*yield*/, this.storage.set(this.tokenName, tokens.refreshToken, expDate ? expDate.toUTCString() : '')];
+                        return [4 /*yield*/, this.storage.set(this.refreshTokenName, tokens.refreshToken, expDate ? expDate.toUTCString() : '')];
                     case 5:
                         _d.sent();
                         _d.label = 6;

@@ -610,7 +610,7 @@ class SharedService {
             }
             if (tokens.refreshToken) {
                 const /** @type {?} */ expDate = yield this.getExpirationDate(tokens.refreshToken);
-                yield this.storage.set(this.tokenName, tokens.refreshToken, expDate ? expDate.toUTCString() : '');
+                yield this.storage.set(this.refreshTokenName, tokens.refreshToken, expDate ? expDate.toUTCString() : '');
             }
             return tokens;
         });
