@@ -8,10 +8,10 @@ import { HttpClient } from '@angular/common/http';
  * Created by Ron on 17/12/2015.
  */
 export declare class OauthService {
-    private http;
-    private shared;
-    private config;
-    private popup;
+    protected http: HttpClient;
+    protected shared: SharedService;
+    protected config: ConfigService;
+    protected popup: PopupService;
     readonly depProviders: ({
         provide: typeof HttpClient;
         useValue: HttpClient;
