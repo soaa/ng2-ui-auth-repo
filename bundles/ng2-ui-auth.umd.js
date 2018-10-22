@@ -23088,7 +23088,7 @@ exports.AuthService = AuthService;
 exports.ConfigService = ConfigService;
 exports.JwtInterceptor = JwtInterceptor;
 exports.CONFIG_OPTIONS = CONFIG_OPTIONS;
-exports.ɵa = TokenRefreshService;
+exports.TokenRefreshService = TokenRefreshService;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

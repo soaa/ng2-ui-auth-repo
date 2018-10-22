@@ -23880,5 +23880,5 @@ Ng2UiAuthModule.ctorParameters = () => [];
  * Generated bundle index. Do not edit.
  */
 
-export { Ng2UiAuthModule, LocalService, Oauth2Service, Oauth1Service, PopupService, OauthService, SharedService, StorageService, BrowserStorageService, AuthService, ConfigService, JwtInterceptor, CONFIG_OPTIONS, TokenRefreshService as ɵa };
+export { Ng2UiAuthModule, LocalService, Oauth2Service, Oauth1Service, PopupService, OauthService, SharedService, StorageService, BrowserStorageService, AuthService, ConfigService, JwtInterceptor, CONFIG_OPTIONS, TokenRefreshService };
 //# sourceMappingURL=ng2-ui-auth.js.map

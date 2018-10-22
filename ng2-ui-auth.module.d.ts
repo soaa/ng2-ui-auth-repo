@@ -1,3 +1,4 @@
+import { TokenRefreshService } from './token.refresh.service';
 /**
  * Created by Ron on 25/12/2015.
  */
@@ -16,4 +17,4 @@ import { StorageType } from './storage-type.enum';
 export declare class Ng2UiAuthModule {
     static forRoot(configOptions?: IPartialConfigOptions, defaultJwtInterceptor?: boolean): ModuleWithProviders;
 }
-export { LocalService, Oauth2Service, Oauth1Service, PopupService, OauthService, SharedService, StorageService, BrowserStorageService, AuthService, ConfigService, IPartialConfigOptions, JwtInterceptor, CONFIG_OPTIONS, IProviders, StorageType };
+export { LocalService, Oauth2Service, Oauth1Service, PopupService, OauthService, SharedService, StorageService, BrowserStorageService, AuthService, ConfigService, IPartialConfigOptions, JwtInterceptor, CONFIG_OPTIONS, IProviders, StorageType, TokenRefreshService };
