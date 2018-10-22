@@ -1,3 +1,4 @@
+import { of as of$1 } from 'rxjs/observable/of';
 import { Inject, Injectable, InjectionToken, Injector, NgModule } from '@angular/core';
 import { Observable as Observable$1 } from 'rxjs/Observable';
 import { delay, map, switchMap, take, tap } from 'rxjs/operators';
@@ -6,8 +7,25 @@ import { fromEvent as fromEvent$1 } from 'rxjs/observable/fromEvent';
 import { _throw as _throw$1 } from 'rxjs/observable/throw';
 import { empty as empty$1 } from 'rxjs/observable/empty';
 import { merge as merge$1 } from 'rxjs/observable/merge';
-import { of as of$1 } from 'rxjs/observable/of';
 import { HTTP_INTERCEPTORS, HttpClient, HttpClientModule } from '@angular/common/http';
+
+class TokenRefreshService {
+    /**
+     * @template T
+     * @param {?} refreshToken
+     * @return {?}
+     */
+    requestTokenRefresh(refreshToken) {
+        return of$1(null);
+    }
+}
+TokenRefreshService.decorators = [
+    { type: Injectable },
+];
+/**
+ * @nocollapse
+ */
+TokenRefreshService.ctorParameters = () => [];
 
 // ngc (Tsickle) doesn't support typescript 2.4 string enums in libraries yet, using consts as a workarount
 // ngc (Tsickle) doesn't support typescript 2.4 string enums in libraries yet, using consts as a workarount
@@ -87,6 +105,7 @@ const defaultOptions = {
     signupUrl: '/auth/signup',
     unlinkUrl: '/auth/unlink/',
     tokenName: 'token',
+    refreshTokenName: 'refresh_token',
     tokenSeparator: '_',
     tokenPrefix: 'ng2-ui-auth',
     authHeader: 'Authorization',
@@ -101,7 +120,7 @@ const defaultOptions = {
             return null;
         }
         if (typeof accessToken === 'string') {
-            return accessToken;
+            return { accessToken: accessToken };
         }
         if (typeof accessToken !== 'object') {
             // console.warn('No token found');
@@ -113,8 +132,9 @@ const defaultOptions = {
             return o[x];
         }, accessToken);
         const /** @type {?} */ token = tokenRootData ? tokenRootData[config.tokenName] : accessToken[config.tokenName];
+        const /** @type {?} */ refreshToken = tokenRootData ? tokenRootData[config.refreshTokenName] : accessToken[config.refreshTokenName];
         if (token) {
-            return token;
+            return { accessToken: token, refreshToken: refreshToken };
         }
         // const tokenPath = this.tokenRoot ? this.tokenRoot + '.' + this.tokenName : this.tokenName;
         // console.warn('Expecting a token named "' + tokenPath);
@@ -496,9 +516,6 @@ BrowserStorageService.ctorParameters = () => [
     { type: ConfigService, },
 ];
 
-/**
- * Created by Ron on 17/12/2015.
- */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -510,17 +527,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 /**
  * Created by Ron on 17/12/2015.
  */
+/**
+ * Created by Ron on 17/12/2015.
+ */
 class SharedService {
     /**
+     * @param {?} tokenRefreshService
      * @param {?} storage
      * @param {?} config
      */
-    constructor(storage, config) {
+    constructor(tokenRefreshService, storage, config) {
+        this.tokenRefreshService = tokenRefreshService;
         this.storage = storage;
         this.config = config;
         this.tokenName = this.config.options.tokenPrefix
             ? [this.config.options.tokenPrefix, this.config.options.tokenName].join(this.config.options.tokenSeparator)
             : this.config.options.tokenName;
+        this.refreshTokenName = this.config.options.tokenPrefix
+            ? [this.config.options.tokenPrefix, this.config.options.refreshTokenName].join(this.config.options.tokenSeparator)
+            : this.config.options.refreshTokenName;
+    }
+    /**
+     * @return {?}
+     */
+    getRefreshToken() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let /** @type {?} */ refreshToken = yield this.storage.get(this.refreshTokenName);
+            return refreshToken;
+        });
     }
     /**
      * @return {?}
@@ -561,19 +595,24 @@ class SharedService {
         return __awaiter(this, void 0, void 0, function* () {
             if (!response) {
                 // console.warn('Can\'t set token without passing a value');
-                return;
+                return null;
             }
-            let /** @type {?} */ token;
+            let /** @type {?} */ tokens;
             if (typeof response === 'string') {
-                token = response;
+                tokens = { accessToken: response };
             }
             else {
-                token = this.config.options.resolveToken(response, this.config.options);
+                tokens = this.config.options.resolveToken(response, this.config.options);
             }
-            if (token) {
-                const /** @type {?} */ expDate = yield this.getExpirationDate(token);
-                yield this.storage.set(this.tokenName, token, expDate ? expDate.toUTCString() : '');
+            if (tokens.accessToken) {
+                const /** @type {?} */ expDate = yield this.getExpirationDate(tokens.accessToken);
+                yield this.storage.set(this.tokenName, tokens.accessToken, expDate ? expDate.toUTCString() : '');
             }
+            if (tokens.refreshToken) {
+                const /** @type {?} */ expDate = yield this.getExpirationDate(tokens.refreshToken);
+                yield this.storage.set(this.tokenName, tokens.refreshToken, expDate ? expDate.toUTCString() : '');
+            }
+            return tokens;
         });
     }
     /**
@@ -593,37 +632,68 @@ class SharedService {
             token = token || (yield this.getToken());
             // a token is present
             if (token) {
-                // token with a valid JWT format XXX.YYY.ZZZ
-                if (token.split('.').length === 3) {
-                    // could be a valid JWT or an access token with the same format
-                    try {
-                        const /** @type {?} */ base64Url = token.split('.')[1];
-                        const /** @type {?} */ base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                        const /** @type {?} */ exp = JSON.parse(this.b64DecodeUnicode(base64)).exp;
-                        // jwt with an optional expiration claims
-                        if (exp) {
-                            const /** @type {?} */ isExpired = Math.round(new Date().getTime() / 1000) >= exp;
-                            if (isExpired) {
-                                // fail: Expired token
-                                yield this.storage.remove(this.tokenName);
-                                return false;
-                            }
-                            else {
-                                // pass: Non-expired token
-                                return true;
-                            }
-                        }
-                    }
-                    catch (e) {
-                        // pass: Non-JWT token that looks like JWT
-                        return true;
-                    }
+                if (this.isValidToken(token)) {
+                    return true;
                 }
-                // pass: All other tokens
-                return true;
+                else {
+                    let /** @type {?} */ refreshToken = yield this.getRefreshToken();
+                    if (refreshToken) {
+                        if (yield this.isValidToken(refreshToken)) {
+                            return yield new Promise((resolve, reject) => {
+                                this.tokenRefreshService.requestTokenRefresh(refreshToken).subscribe((response) => __awaiter(this, void 0, void 0, function* () {
+                                    const /** @type {?} */ tokens = yield this.setToken(response);
+                                    if (tokens) {
+                                        resolve(yield this.isValidToken(tokens.accessToken));
+                                    }
+                                    else
+                                        resolve(false);
+                                }), (e) => reject(e));
+                            });
+                        }
+                        yield this.storage.remove(this.refreshTokenName);
+                    }
+                    yield this.storage.remove(this.tokenName);
+                    return false;
+                }
             }
             // lail: No token at all
             return false;
+        });
+    }
+    /**
+     * @param {?} token
+     * @return {?}
+     */
+    isValidToken(token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // token with a valid JWT format XXX.YYY.ZZZ
+            if (token.split('.').length === 3) {
+                // could be a valid JWT or an access token with the same format
+                try {
+                    const /** @type {?} */ base64Url = token.split('.')[1];
+                    const /** @type {?} */ base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const /** @type {?} */ exp = JSON.parse(this.b64DecodeUnicode(base64)).exp;
+                    // jwt with an optional expiration claims
+                    if (exp) {
+                        const /** @type {?} */ isExpired = Math.round(new Date().getTime() / 1000) >= exp;
+                        if (isExpired) {
+                            // fail: Expired token
+                            yield this.storage.remove(this.tokenName);
+                            return false;
+                        }
+                        else {
+                            // pass: Non-expired token
+                            return true;
+                        }
+                    }
+                }
+                catch (e) {
+                    // pass: Non-JWT token that looks like JWT
+                    return true;
+                }
+            }
+            // pass: All other tokens
+            return true;
         });
     }
     /**
@@ -675,6 +745,7 @@ SharedService.decorators = [
  * @nocollapse
  */
 SharedService.ctorParameters = () => [
+    { type: TokenRefreshService, },
     { type: StorageService, },
     { type: ConfigService, },
 ];
@@ -23792,6 +23863,7 @@ class Ng2UiAuthModule {
                 { provide: PopupService, useClass: PopupService, deps: [ConfigService] },
                 { provide: LocalService, useClass: LocalService, deps: [HttpClient, SharedService, ConfigService] },
                 { provide: AuthService, useClass: AuthService, deps: [SharedService, LocalService, OauthService] },
+                { provide: TokenRefreshService, useClass: TokenRefreshService, deps: [] }
             ],
         };
     }
@@ -23808,5 +23880,5 @@ Ng2UiAuthModule.ctorParameters = () => [];
  * Generated bundle index. Do not edit.
  */
 
-export { Ng2UiAuthModule, LocalService, Oauth2Service, Oauth1Service, PopupService, OauthService, SharedService, StorageService, BrowserStorageService, AuthService, ConfigService, JwtInterceptor, CONFIG_OPTIONS };
+export { Ng2UiAuthModule, LocalService, Oauth2Service, Oauth1Service, PopupService, OauthService, SharedService, StorageService, BrowserStorageService, AuthService, ConfigService, JwtInterceptor, CONFIG_OPTIONS, TokenRefreshService as ɵa };
 //# sourceMappingURL=ng2-ui-auth.js.map

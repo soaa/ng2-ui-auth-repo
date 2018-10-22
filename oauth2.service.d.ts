@@ -7,11 +7,13 @@ import { HttpClient } from '@angular/common/http';
  * Created by Ron on 17/12/2015.
  */
 export declare class Oauth2Service implements IOauthService {
-    private http;
-    private popup;
-    private config;
+    protected http: HttpClient;
+    protected popup: PopupService;
+    protected config: ConfigService;
     constructor(http: HttpClient, popup: PopupService, config: ConfigService);
     open<T extends object | string = any>(oauthOptions: IOauth2Options, userData: object): Observable<T>;
-    private exchangeForToken<T>(options, authorizationData, oauthData, userData);
-    private getAuthorizationData(options);
+    protected exchangeForToken<T>(options: IOauth2Options, authorizationData: object, oauthData: object, userData: object): Observable<T>;
+    protected getAuthorizationData(options: IOauth2Options): {
+        [key: string]: string;
+    };
 }

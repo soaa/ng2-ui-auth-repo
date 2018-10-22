@@ -1,8 +1,8 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@angular/core'), require('rxjs/Observable'), require('rxjs/operators'), require('rxjs/observable/interval'), require('rxjs/observable/fromEvent'), require('rxjs/observable/throw'), require('rxjs/observable/empty'), require('rxjs/observable/merge'), require('rxjs/observable/of'), require('@angular/common/http')) :
-	typeof define === 'function' && define.amd ? define(['exports', '@angular/core', 'rxjs/Observable', 'rxjs/operators', 'rxjs/observable/interval', 'rxjs/observable/fromEvent', 'rxjs/observable/throw', 'rxjs/observable/empty', 'rxjs/observable/merge', 'rxjs/observable/of', '@angular/common/http'], factory) :
-	(factory((global['ng2-ui-auth'] = {}),global.ng.core,global.Rx,global.Rx.Operators,global.Rx.Observable,global.Rx.Observable,global.Rx.Observable,global.Rx.Observable,global.Rx.Observable,global.Rx.Observable,global.ng.common.http));
-}(this, (function (exports,core,Observable,operators,interval,fromEvent,_throw,empty,merge,of,http) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('rxjs/observable/of'), require('@angular/core'), require('rxjs/Observable'), require('rxjs/operators'), require('rxjs/observable/interval'), require('rxjs/observable/fromEvent'), require('rxjs/observable/throw'), require('rxjs/observable/empty'), require('rxjs/observable/merge'), require('@angular/common/http')) :
+	typeof define === 'function' && define.amd ? define(['exports', 'rxjs/observable/of', '@angular/core', 'rxjs/Observable', 'rxjs/operators', 'rxjs/observable/interval', 'rxjs/observable/fromEvent', 'rxjs/observable/throw', 'rxjs/observable/empty', 'rxjs/observable/merge', '@angular/common/http'], factory) :
+	(factory((global['ng2-ui-auth'] = {}),global.Rx.Observable,global.ng.core,global.Rx,global.Rx.Operators,global.Rx.Observable,global.Rx.Observable,global.Rx.Observable,global.Rx.Observable,global.Rx.Observable,global.ng.common.http));
+}(this, (function (exports,of,core,Observable,operators,interval,fromEvent,_throw,empty,merge,http) { 'use strict';
 
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -41,6 +41,26 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var TokenRefreshService = (function () {
+    function TokenRefreshService() {
+    }
+    /**
+     * @template T
+     * @param {?} refreshToken
+     * @return {?}
+     */
+    TokenRefreshService.prototype.requestTokenRefresh = function (refreshToken) {
+        return of.of(null);
+    };
+    return TokenRefreshService;
+}());
+TokenRefreshService.decorators = [
+    { type: core.Injectable },
+];
+/**
+ * @nocollapse
+ */
+TokenRefreshService.ctorParameters = function () { return []; };
 // ngc (Tsickle) doesn't support typescript 2.4 string enums in libraries yet, using consts as a workarount
 // ngc (Tsickle) doesn't support typescript 2.4 string enums in libraries yet, using consts as a workarount
 var NONE = 'none';
@@ -117,6 +137,7 @@ var defaultOptions = {
     signupUrl: '/auth/signup',
     unlinkUrl: '/auth/unlink/',
     tokenName: 'token',
+    refreshTokenName: 'refresh_token',
     tokenSeparator: '_',
     tokenPrefix: 'ng2-ui-auth',
     authHeader: 'Authorization',
@@ -131,7 +152,7 @@ var defaultOptions = {
             return null;
         }
         if (typeof accessToken === 'string') {
-            return accessToken;
+            return { accessToken: accessToken };
         }
         if (typeof accessToken !== 'object') {
             // console.warn('No token found');
@@ -143,8 +164,9 @@ var defaultOptions = {
             return o[x];
         }, accessToken);
         var /** @type {?} */ token = tokenRootData ? tokenRootData[config.tokenName] : accessToken[config.tokenName];
+        var /** @type {?} */ refreshToken = tokenRootData ? tokenRootData[config.refreshTokenName] : accessToken[config.refreshTokenName];
         if (token) {
-            return token;
+            return { accessToken: token, refreshToken: refreshToken };
         }
         // const tokenPath = this.tokenRoot ? this.tokenRoot + '.' + this.tokenName : this.tokenName;
         // console.warn('Expecting a token named "' + tokenPath);
@@ -555,9 +577,6 @@ BrowserStorageService.decorators = [
 BrowserStorageService.ctorParameters = function () { return [
     { type: ConfigService, },
 ]; };
-/**
- * Created by Ron on 17/12/2015.
- */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try {
@@ -579,18 +598,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 /**
  * Created by Ron on 17/12/2015.
  */
+/**
+ * Created by Ron on 17/12/2015.
+ */
 var SharedService = (function () {
     /**
+     * @param {?} tokenRefreshService
      * @param {?} storage
      * @param {?} config
      */
-    function SharedService(storage, config) {
+    function SharedService(tokenRefreshService, storage, config) {
+        this.tokenRefreshService = tokenRefreshService;
         this.storage = storage;
         this.config = config;
         this.tokenName = this.config.options.tokenPrefix
             ? [this.config.options.tokenPrefix, this.config.options.tokenName].join(this.config.options.tokenSeparator)
             : this.config.options.tokenName;
+        this.refreshTokenName = this.config.options.tokenPrefix
+            ? [this.config.options.tokenPrefix, this.config.options.refreshTokenName].join(this.config.options.tokenSeparator)
+            : this.config.options.refreshTokenName;
     }
+    /**
+     * @return {?}
+     */
+    SharedService.prototype.getRefreshToken = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var refreshToken;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
+                    case 0: return [4 /*yield*/, this.storage.get(this.refreshTokenName)];
+                    case 1:
+                        refreshToken = _d.sent();
+                        return [2 /*return*/, refreshToken];
+                }
+            });
+        });
+    };
     /**
      * @return {?}
      */
@@ -652,29 +695,38 @@ var SharedService = (function () {
      */
     SharedService.prototype.setToken = function (response) {
         return __awaiter(this, void 0, void 0, function () {
-            var token, expDate;
+            var tokens, expDate, expDate;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
                         if (!response) {
                             // console.warn('Can\'t set token without passing a value');
-                            return [2 /*return*/];
+                            return [2 /*return*/, null];
                         }
                         if (typeof response === 'string') {
-                            token = response;
+                            tokens = { accessToken: response };
                         }
                         else {
-                            token = this.config.options.resolveToken(response, this.config.options);
+                            tokens = this.config.options.resolveToken(response, this.config.options);
                         }
-                        if (!token) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this.getExpirationDate(token)];
+                        if (!tokens.accessToken) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.getExpirationDate(tokens.accessToken)];
                     case 1:
                         expDate = _d.sent();
-                        return [4 /*yield*/, this.storage.set(this.tokenName, token, expDate ? expDate.toUTCString() : '')];
+                        return [4 /*yield*/, this.storage.set(this.tokenName, tokens.accessToken, expDate ? expDate.toUTCString() : '')];
                     case 2:
                         _d.sent();
                         _d.label = 3;
-                    case 3: return [2 /*return*/];
+                    case 3:
+                        if (!tokens.refreshToken) return [3 /*break*/, 6];
+                        return [4 /*yield*/, this.getExpirationDate(tokens.refreshToken)];
+                    case 4:
+                        expDate = _d.sent();
+                        return [4 /*yield*/, this.storage.set(this.tokenName, tokens.refreshToken, expDate ? expDate.toUTCString() : '')];
+                    case 5:
+                        _d.sent();
+                        _d.label = 6;
+                    case 6: return [2 /*return*/, tokens];
                 }
             });
         });
@@ -700,7 +752,8 @@ var SharedService = (function () {
      */
     SharedService.prototype.isAuthenticated = function (token) {
         return __awaiter(this, void 0, void 0, function () {
-            var _d, base64Url, base64, exp, isExpired, e_1;
+            var _this = this;
+            var _d, refreshToken_1;
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
@@ -712,37 +765,91 @@ var SharedService = (function () {
                         _e.label = 2;
                     case 2:
                         token = _d;
-                        if (!token) return [3 /*break*/, 9];
-                        if (!(token.split('.').length === 3)) return [3 /*break*/, 8];
-                        _e.label = 3;
-                    case 3:
-                        _e.trys.push([3, 7, , 8]);
+                        if (!token) return [3 /*break*/, 11];
+                        if (!this.isValidToken(token)) return [3 /*break*/, 3];
+                        return [2 /*return*/, true];
+                    case 3: return [4 /*yield*/, this.getRefreshToken()];
+                    case 4:
+                        refreshToken_1 = _e.sent();
+                        if (!refreshToken_1) return [3 /*break*/, 9];
+                        return [4 /*yield*/, this.isValidToken(refreshToken_1)];
+                    case 5:
+                        if (!_e.sent()) return [3 /*break*/, 7];
+                        return [4 /*yield*/, new Promise(function (resolve, reject) {
+                                _this.tokenRefreshService.requestTokenRefresh(refreshToken_1).subscribe(function (response) { return __awaiter(_this, void 0, void 0, function () {
+                                    var tokens, _d;
+                                    return __generator(this, function (_e) {
+                                        switch (_e.label) {
+                                            case 0: return [4 /*yield*/, this.setToken(response)];
+                                            case 1:
+                                                tokens = _e.sent();
+                                                if (!tokens) return [3 /*break*/, 3];
+                                                _d = resolve;
+                                                return [4 /*yield*/, this.isValidToken(tokens.accessToken)];
+                                            case 2:
+                                                _d.apply(void 0, [_e.sent()]);
+                                                return [3 /*break*/, 4];
+                                            case 3:
+                                                resolve(false);
+                                                _e.label = 4;
+                                            case 4: return [2 /*return*/];
+                                        }
+                                    });
+                                }); }, function (e) { return reject(e); });
+                            })];
+                    case 6: return [2 /*return*/, _e.sent()];
+                    case 7: return [4 /*yield*/, this.storage.remove(this.refreshTokenName)];
+                    case 8:
+                        _e.sent();
+                        _e.label = 9;
+                    case 9: return [4 /*yield*/, this.storage.remove(this.tokenName)];
+                    case 10:
+                        _e.sent();
+                        return [2 /*return*/, false];
+                    case 11: 
+                    // lail: No token at all
+                    return [2 /*return*/, false];
+                }
+            });
+        });
+    };
+    /**
+     * @param {?} token
+     * @return {?}
+     */
+    SharedService.prototype.isValidToken = function (token) {
+        return __awaiter(this, void 0, void 0, function () {
+            var base64Url, base64, exp, isExpired, e_1;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
+                    case 0:
+                        if (!(token.split('.').length === 3)) return [3 /*break*/, 6];
+                        _d.label = 1;
+                    case 1:
+                        _d.trys.push([1, 5, , 6]);
                         base64Url = token.split('.')[1];
                         base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                         exp = JSON.parse(this.b64DecodeUnicode(base64)).exp;
-                        if (!exp) return [3 /*break*/, 6];
+                        if (!exp) return [3 /*break*/, 4];
                         isExpired = Math.round(new Date().getTime() / 1000) >= exp;
-                        if (!isExpired) return [3 /*break*/, 5];
+                        if (!isExpired) return [3 /*break*/, 3];
                         // fail: Expired token
                         return [4 /*yield*/, this.storage.remove(this.tokenName)];
-                    case 4:
+                    case 2:
                         // fail: Expired token
-                        _e.sent();
+                        _d.sent();
                         return [2 /*return*/, false];
-                    case 5: 
+                    case 3: 
                     // pass: Non-expired token
                     return [2 /*return*/, true];
-                    case 6: return [3 /*break*/, 8];
-                    case 7:
-                        e_1 = _e.sent();
+                    case 4: return [3 /*break*/, 6];
+                    case 5:
+                        e_1 = _d.sent();
                         // pass: Non-JWT token that looks like JWT
                         return [2 /*return*/, true];
-                    case 8: 
+                    case 6: 
                     // pass: All other tokens
                     return [2 /*return*/, true];
-                    case 9: 
-                    // lail: No token at all
-                    return [2 /*return*/, false];
                 }
             });
         });
@@ -813,6 +920,7 @@ SharedService.decorators = [
  * @nocollapse
  */
 SharedService.ctorParameters = function () { return [
+    { type: TokenRefreshService, },
     { type: StorageService, },
     { type: ConfigService, },
 ]; };
@@ -22953,6 +23061,7 @@ var Ng2UiAuthModule = (function () {
                 { provide: PopupService, useClass: PopupService, deps: [ConfigService] },
                 { provide: LocalService, useClass: LocalService, deps: [http.HttpClient, SharedService, ConfigService] },
                 { provide: AuthService, useClass: AuthService, deps: [SharedService, LocalService, OauthService] },
+                { provide: TokenRefreshService, useClass: TokenRefreshService, deps: [] }
             ]),
         };
     };
@@ -22979,6 +23088,7 @@ exports.AuthService = AuthService;
 exports.ConfigService = ConfigService;
 exports.JwtInterceptor = JwtInterceptor;
 exports.CONFIG_OPTIONS = CONFIG_OPTIONS;
+exports.ɵa = TokenRefreshService;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

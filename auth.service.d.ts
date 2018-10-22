@@ -3,6 +3,7 @@ import { LocalService } from './local.service';
 import { OauthService } from './oauth.service';
 import { Observable } from 'rxjs/Observable';
 import { StorageType } from './storage-type.enum';
+import { Tokens } from './config.service';
 /**
  * Created by Ron on 17/12/2015.
  */
@@ -19,7 +20,7 @@ export declare class AuthService {
     unlink<T = any>(provider: string, url?: string): Observable<T>;
     isAuthenticated(): Promise<boolean>;
     getToken(): Promise<string | null>;
-    setToken(token: string | object): Promise<void>;
+    setToken(token: string | object): Promise<Tokens>;
     removeToken(): Promise<void>;
     getPayload(): Promise<any>;
     setStorageType(type: StorageType): boolean;
