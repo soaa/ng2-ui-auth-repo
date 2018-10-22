@@ -532,14 +532,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
  */
 class SharedService {
     /**
-     * @param {?} tokenRefreshService
      * @param {?} storage
      * @param {?} config
+     * @param {?} tokenRefreshService
      */
-    constructor(tokenRefreshService, storage, config) {
-        this.tokenRefreshService = tokenRefreshService;
+    constructor(storage, config, tokenRefreshService) {
         this.storage = storage;
         this.config = config;
+        this.tokenRefreshService = tokenRefreshService;
         this.tokenName = this.config.options.tokenPrefix
             ? [this.config.options.tokenPrefix, this.config.options.tokenName].join(this.config.options.tokenSeparator)
             : this.config.options.tokenName;
@@ -745,9 +745,9 @@ SharedService.decorators = [
  * @nocollapse
  */
 SharedService.ctorParameters = () => [
-    { type: TokenRefreshService, },
     { type: StorageService, },
     { type: ConfigService, },
+    { type: TokenRefreshService, },
 ];
 
 /**
@@ -23857,7 +23857,7 @@ class Ng2UiAuthModule {
                 ...configOptions ? [{ provide: CONFIG_OPTIONS, useValue: configOptions }] : [],
                 { provide: ConfigService, useClass: ConfigService, deps: [CONFIG_OPTIONS] },
                 { provide: StorageService, useClass: BrowserStorageService, deps: [ConfigService] },
-                { provide: SharedService, useClass: SharedService, deps: [StorageService, ConfigService] },
+                { provide: SharedService, useClass: SharedService, deps: [StorageService, ConfigService, TokenRefreshService] },
                 ...defaultJwtInterceptor ? [{ provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true, deps: [SharedService, ConfigService] }] : [],
                 { provide: OauthService, useClass: OauthService, deps: [HttpClient, SharedService, ConfigService, PopupService] },
                 { provide: PopupService, useClass: PopupService, deps: [ConfigService] },

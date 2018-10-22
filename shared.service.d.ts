@@ -10,12 +10,12 @@ import { StorageType } from './storage-type.enum';
  * Created by Ron on 17/12/2015.
  */
 export declare class SharedService {
-    private tokenRefreshService;
     private storage;
     private config;
+    private tokenRefreshService;
     tokenName: string;
     refreshTokenName: string;
-    constructor(tokenRefreshService: TokenRefreshService, storage: StorageService, config: ConfigService);
+    constructor(storage: StorageService, config: ConfigService, tokenRefreshService: TokenRefreshService);
     getRefreshToken(): Promise<string>;
     getToken(): Promise<string>;
     getPayload(token?: string): Promise<any>;
