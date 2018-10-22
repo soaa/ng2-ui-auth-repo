@@ -120,7 +120,8 @@ const defaultOptions = {
             return null;
         }
         if (typeof accessToken === 'string') {
-            return { accessToken: accessToken };
+            const /** @type {?} */ refreshToken = response[config.refreshTokenName];
+            return { accessToken: accessToken, refreshToken: refreshToken };
         }
         if (typeof accessToken !== 'object') {
             // console.warn('No token found');

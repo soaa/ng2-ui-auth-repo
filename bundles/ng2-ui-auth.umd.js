@@ -152,7 +152,8 @@ var defaultOptions = {
             return null;
         }
         if (typeof accessToken === 'string') {
-            return { accessToken: accessToken };
+            var /** @type {?} */ refreshToken_1 = response[config.refreshTokenName];
+            return { accessToken: accessToken, refreshToken: refreshToken_1 };
         }
         if (typeof accessToken !== 'object') {
             // console.warn('No token found');
@@ -753,7 +754,7 @@ var SharedService = (function () {
     SharedService.prototype.isAuthenticated = function (token) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
-            var _d, refreshToken_1;
+            var _d, refreshToken_2;
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
@@ -770,13 +771,13 @@ var SharedService = (function () {
                         return [2 /*return*/, true];
                     case 3: return [4 /*yield*/, this.getRefreshToken()];
                     case 4:
-                        refreshToken_1 = _e.sent();
-                        if (!refreshToken_1) return [3 /*break*/, 9];
-                        return [4 /*yield*/, this.isValidToken(refreshToken_1)];
+                        refreshToken_2 = _e.sent();
+                        if (!refreshToken_2) return [3 /*break*/, 9];
+                        return [4 /*yield*/, this.isValidToken(refreshToken_2)];
                     case 5:
                         if (!_e.sent()) return [3 /*break*/, 7];
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                _this.tokenRefreshService.requestTokenRefresh(refreshToken_1).subscribe(function (response) { return __awaiter(_this, void 0, void 0, function () {
+                                _this.tokenRefreshService.requestTokenRefresh(refreshToken_2).subscribe(function (response) { return __awaiter(_this, void 0, void 0, function () {
                                     var tokens, _d;
                                     return __generator(this, function (_e) {
                                         switch (_e.label) {
