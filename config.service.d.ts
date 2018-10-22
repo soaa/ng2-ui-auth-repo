@@ -69,6 +69,7 @@ export interface IPartialConfigOptions {
     loginUrl?: string;
     signupUrl?: string;
     unlinkUrl?: string;
+    refreshTokenName?: string;
     tokenName?: string;
     tokenSeparator?: string;
     tokenPrefix?: string;
