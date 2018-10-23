@@ -611,6 +611,7 @@ class SharedService {
             }
             if (tokens.refreshToken) {
                 const /** @type {?} */ expDate = yield this.getExpirationDate(tokens.refreshToken);
+                console.debug(`refreshToken exp = ${expDate}`);
                 yield this.storage.set(this.refreshTokenName, tokens.refreshToken, expDate ? expDate.toUTCString() : '');
             }
             return tokens;
@@ -632,32 +633,28 @@ class SharedService {
         return __awaiter(this, void 0, void 0, function* () {
             token = token || (yield this.getToken());
             // a token is present
-            if (token) {
-                if (this.isValidToken(token)) {
-                    return true;
-                }
-                else {
-                    let /** @type {?} */ refreshToken = yield this.getRefreshToken();
-                    if (refreshToken) {
-                        if (yield this.isValidToken(refreshToken)) {
-                            return yield new Promise((resolve, reject) => {
-                                this.tokenRefreshService.requestTokenRefresh(refreshToken).subscribe((response) => __awaiter(this, void 0, void 0, function* () {
-                                    const /** @type {?} */ tokens = yield this.setToken(response);
-                                    if (tokens) {
-                                        resolve(yield this.isValidToken(tokens.accessToken));
-                                    }
-                                    else
-                                        resolve(false);
-                                }), (e) => reject(e));
-                            });
-                        }
-                        yield this.storage.remove(this.refreshTokenName);
-                    }
-                    yield this.storage.remove(this.tokenName);
-                    return false;
-                }
+            if (token && (yield this.isValidToken(token))) {
+                return true;
             }
-            // lail: No token at all
+            let /** @type {?} */ refreshToken = yield this.getRefreshToken();
+            if (refreshToken) {
+                console.debug('refresh token found');
+                if (yield this.isValidToken(refreshToken)) {
+                    return yield new Promise((resolve, reject) => {
+                        this.tokenRefreshService.requestTokenRefresh(refreshToken).subscribe((response) => __awaiter(this, void 0, void 0, function* () {
+                            const /** @type {?} */ tokens = yield this.setToken(response);
+                            if (tokens) {
+                                resolve(yield this.isValidToken(tokens.accessToken));
+                            }
+                            else
+                                resolve(false);
+                        }), (e) => reject(e));
+                    });
+                }
+                yield this.storage.remove(this.refreshTokenName);
+            }
+            if (token)
+                yield this.storage.remove(this.tokenName);
             return false;
         });
     }
@@ -679,7 +676,6 @@ class SharedService {
                         const /** @type {?} */ isExpired = Math.round(new Date().getTime() / 1000) >= exp;
                         if (isExpired) {
                             // fail: Expired token
-                            yield this.storage.remove(this.tokenName);
                             return false;
                         }
                         else {

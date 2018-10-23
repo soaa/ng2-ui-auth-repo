@@ -723,6 +723,7 @@ var SharedService = (function () {
                         return [4 /*yield*/, this.getExpirationDate(tokens.refreshToken)];
                     case 4:
                         expDate = _d.sent();
+                        console.debug("refreshToken exp = " + expDate);
                         return [4 /*yield*/, this.storage.set(this.refreshTokenName, tokens.refreshToken, expDate ? expDate.toUTCString() : '')];
                     case 5:
                         _d.sent();
@@ -754,30 +755,39 @@ var SharedService = (function () {
     SharedService.prototype.isAuthenticated = function (token) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
-            var _d, refreshToken_2;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var _d, _e, refreshToken;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0:
                         _d = token;
                         if (_d) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.getToken()];
                     case 1:
-                        _d = (_e.sent());
-                        _e.label = 2;
+                        _d = (_f.sent());
+                        _f.label = 2;
                     case 2:
                         token = _d;
-                        if (!token) return [3 /*break*/, 11];
-                        if (!this.isValidToken(token)) return [3 /*break*/, 3];
-                        return [2 /*return*/, true];
-                    case 3: return [4 /*yield*/, this.getRefreshToken()];
+                        _e = token;
+                        if (!_e) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.isValidToken(token)];
+                    case 3:
+                        _e = (_f.sent());
+                        _f.label = 4;
                     case 4:
-                        refreshToken_2 = _e.sent();
-                        if (!refreshToken_2) return [3 /*break*/, 9];
-                        return [4 /*yield*/, this.isValidToken(refreshToken_2)];
+                        // a token is present
+                        if (_e) {
+                            return [2 /*return*/, true];
+                        }
+                        return [4 /*yield*/, this.getRefreshToken()];
                     case 5:
-                        if (!_e.sent()) return [3 /*break*/, 7];
+                        refreshToken = _f.sent();
+                        if (!refreshToken) return [3 /*break*/, 10];
+                        console.debug('refresh token found');
+                        return [4 /*yield*/, this.isValidToken(refreshToken)];
+                    case 6:
+                        if (!_f.sent()) return [3 /*break*/, 8];
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                _this.tokenRefreshService.requestTokenRefresh(refreshToken_2).subscribe(function (response) { return __awaiter(_this, void 0, void 0, function () {
+                                _this.tokenRefreshService.requestTokenRefresh(refreshToken).subscribe(function (response) { return __awaiter(_this, void 0, void 0, function () {
                                     var tokens, _d;
                                     return __generator(this, function (_e) {
                                         switch (_e.label) {
@@ -798,18 +808,18 @@ var SharedService = (function () {
                                     });
                                 }); }, function (e) { return reject(e); });
                             })];
-                    case 6: return [2 /*return*/, _e.sent()];
-                    case 7: return [4 /*yield*/, this.storage.remove(this.refreshTokenName)];
-                    case 8:
-                        _e.sent();
-                        _e.label = 9;
-                    case 9: return [4 /*yield*/, this.storage.remove(this.tokenName)];
+                    case 7: return [2 /*return*/, _f.sent()];
+                    case 8: return [4 /*yield*/, this.storage.remove(this.refreshTokenName)];
+                    case 9:
+                        _f.sent();
+                        _f.label = 10;
                     case 10:
-                        _e.sent();
-                        return [2 /*return*/, false];
-                    case 11: 
-                    // lail: No token at all
-                    return [2 /*return*/, false];
+                        if (!token) return [3 /*break*/, 12];
+                        return [4 /*yield*/, this.storage.remove(this.tokenName)];
+                    case 11:
+                        _f.sent();
+                        _f.label = 12;
+                    case 12: return [2 /*return*/, false];
                 }
             });
         });
@@ -820,38 +830,35 @@ var SharedService = (function () {
      */
     SharedService.prototype.isValidToken = function (token) {
         return __awaiter(this, void 0, void 0, function () {
-            var base64Url, base64, exp, isExpired, e_1;
+            var base64Url, base64, exp, isExpired;
             return __generator(this, function (_d) {
-                switch (_d.label) {
-                    case 0:
-                        if (!(token.split('.').length === 3)) return [3 /*break*/, 6];
-                        _d.label = 1;
-                    case 1:
-                        _d.trys.push([1, 5, , 6]);
+                // token with a valid JWT format XXX.YYY.ZZZ
+                if (token.split('.').length === 3) {
+                    // could be a valid JWT or an access token with the same format
+                    try {
                         base64Url = token.split('.')[1];
                         base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                         exp = JSON.parse(this.b64DecodeUnicode(base64)).exp;
-                        if (!exp) return [3 /*break*/, 4];
-                        isExpired = Math.round(new Date().getTime() / 1000) >= exp;
-                        if (!isExpired) return [3 /*break*/, 3];
-                        // fail: Expired token
-                        return [4 /*yield*/, this.storage.remove(this.tokenName)];
-                    case 2:
-                        // fail: Expired token
-                        _d.sent();
-                        return [2 /*return*/, false];
-                    case 3: 
-                    // pass: Non-expired token
-                    return [2 /*return*/, true];
-                    case 4: return [3 /*break*/, 6];
-                    case 5:
-                        e_1 = _d.sent();
+                        // jwt with an optional expiration claims
+                        if (exp) {
+                            isExpired = Math.round(new Date().getTime() / 1000) >= exp;
+                            if (isExpired) {
+                                // fail: Expired token
+                                return [2 /*return*/, false];
+                            }
+                            else {
+                                // pass: Non-expired token
+                                return [2 /*return*/, true];
+                            }
+                        }
+                    }
+                    catch (e) {
                         // pass: Non-JWT token that looks like JWT
                         return [2 /*return*/, true];
-                    case 6: 
-                    // pass: All other tokens
-                    return [2 /*return*/, true];
+                    }
                 }
+                // pass: All other tokens
+                return [2 /*return*/, true];
             });
         });
     };
